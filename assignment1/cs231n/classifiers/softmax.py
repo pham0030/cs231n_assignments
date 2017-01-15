@@ -22,6 +22,9 @@ def softmax_loss_naive(W, X, y, reg):
   # Initialize the loss and gradient to zero.
   loss = 0.0
   dW = np.zeros_like(W)
+  N = X.shape[0]  # number of training data
+  D = X.shape[1]  # dimenson of training data
+  C = W.shape[1]  # number of classes
 
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using explicit loops.     #
@@ -29,11 +32,24 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  for i in xrange(N):
+    f_i = np.dot(X[i, :], W)  # scores for ith image
+    f_i -= np.max(f_i)  # shifting scores for numerical stability
+    p = np.exp(f_i)  # not yet normalized probabilities
+    # compute loss
+    L_i = -f_i[y[i]] + np.log(np.sum(p))  # loss of ith image
+    loss += L_i  ## add to total loss
+    # compute gradent
+    dscores_i = p/np.sum(p)
+    dscores_i[y[i]] -= 1  # dscores @ correct image need to reduce by 1
+    dW += np.dot(X[i, :].reshape(-1,1), dscores_i.reshape(1,-1))
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
-
+  loss /= N
+  loss += 0.5 * reg * np.sum(W*W)
+  dW /= N
+  dW += reg * W
   return loss, dW
 
 
@@ -46,14 +62,30 @@ def softmax_loss_vectorized(W, X, y, reg):
   # Initialize the loss and gradient to zero.
   loss = 0.0
   dW = np.zeros_like(W)
-
+  num_examples = X.shape[0]  # number of training data
+  D = X.shape[1]  # dimenson of training data
+  C = W.shape[1]  # number of classes
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
   # Store the loss in loss and the gradient in dW. If you are not careful     #
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  scores = np.dot(X, W)
+  scores -= np.max(scores)  # shift scores for stability
+  exp_scores = np.exp(scores)  # unormalized probabilities
+  probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+  correct_logprobs = -np.log(probs[range(num_examples),y])
+  # compute loss
+  loss = np.sum(correct_logprobs)/num_examples
+  loss += 0.5 * reg * np.sum(W*W)
+  # compute gradient
+  dscores = probs
+  dscores[range(num_examples),y] -= 1
+  dscores /= num_examples
+  dW = np.dot(X.T, dscores)
+  dW += reg*W
+  
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################

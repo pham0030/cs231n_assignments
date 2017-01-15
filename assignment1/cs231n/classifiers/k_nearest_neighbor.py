@@ -93,7 +93,7 @@ class KNearestNeighbor(object):
       # Compute the l2 distance between the ith test point and all training #
       # points, and store the result in dists[i, :].                        #
       #######################################################################
-      pass
+      dists[i, :] = np.sum((self.X_train - X[i, :])**2, axis=1)
       #######################################################################
       #                         END OF YOUR CODE                            #
       #######################################################################
@@ -121,7 +121,11 @@ class KNearestNeighbor(object):
     # HINT: Try to formulate the l2 distance using matrix multiplication    #
     #       and two broadcast sums.                                         #
     #########################################################################
-    pass
+    M = np.dot(X, self.X_train.T)
+    test_matrix = np.sum(np.square(X), axis=1)
+    train_matrix = np.sum(np.square(self.X_train), axis=1)
+    dists = -2*M+train_matrix+np.matrix(test_matrix).T
+    dists = np.asarray(dists)
     #########################################################################
     #                         END OF YOUR CODE                              #
     #########################################################################
@@ -153,11 +157,9 @@ class KNearestNeighbor(object):
       # neighbors. Store these labels in closest_y.                           #
       # Hint: Look up the function numpy.argsort.                             #
       #########################################################################
-      k_sorted_idx = np.argsort(dists[i])[:k]
+      k_sorted_idx = np.argsort(dists[i,:])[:k]
       closest_y = self.y_train[k_sorted_idx]
       counts = np.bincount(closest_y)  # count the most common label
-      y_pred[i] = np.argmax(counts)  # predict the label, break ties by choosing
-                                     # the smaller label
       #########################################################################
       # TODO:                                                                 #
       # Now that you have found the labels of the k nearest neighbors, you    #
@@ -165,7 +167,8 @@ class KNearestNeighbor(object):
       # Store this label in y_pred[i]. Break ties by choosing the smaller     #
       # label.                                                                #
       #########################################################################
-      pass
+      y_pred[i] = np.argmax(counts)  # predict the label, break ties by choosing
+                                     # the smaller label
       #########################################################################
       #                           END OF YOUR CODE                            # 
       #########################################################################
